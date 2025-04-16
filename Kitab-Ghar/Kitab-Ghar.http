@@ -1,0 +1,6 @@
+@Kitab_Ghar_HostAddress = http://localhost:5236
+
+GET {{Kitab_Ghar_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

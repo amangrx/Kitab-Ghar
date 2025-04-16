@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kitab-Ghar", "Kitab-Ghar\Kitab-Ghar.csproj", "{BF96BE21-C989-46F9-B83E-F93D413BC903}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF96BE21-C989-46F9-B83E-F93D413BC903}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF96BE21-C989-46F9-B83E-F93D413BC903}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF96BE21-C989-46F9-B83E-F93D413BC903}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF96BE21-C989-46F9-B83E-F93D413BC903}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {350C9FF8-372D-4946-A643-2F2B3DB57DF9}
+	EndGlobalSection
+EndGlobal
