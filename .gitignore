@@ -14,6 +14,10 @@ appsettings.*.json
 *.userosscache
 *.sln.docstates
 
+*/migrations/
+**/migrations/
+
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
