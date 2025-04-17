@@ -37,20 +37,20 @@ public class AuthController : ControllerBase
         return BadRequest(result.Errors);
     }
 
-    [HttpPost("register-member")]
-    public async Task<IActionResult> RegisterAsMember([FromBody] CredentialDto model)
-    {
-        var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-        var result = await _userManager.CreateAsync(user, model.Password);
+    //[HttpPost("register-different")]
+    //public async Task<IActionResult> RegisterAsDifferent([FromBody] CredentialDto model)
+    //{
+    //    var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+    //    var result = await _userManager.CreateAsync(user, model.Password);
 
-        if (result.Succeeded)
-        {
-            await _userManager.AddToRoleAsync(user, "Member");
-            return Ok("Member registered successfully.");
-        }
+    //    if (result.Succeeded)
+    //    {
+    //        await _userManager.AddToRoleAsync(user, "different");
+    //        return Ok("User registered successfully.");
+    //    }
 
-        return BadRequest(result.Errors);
-    }
+    //    return BadRequest(result.Errors);
+    //}
 
     [HttpPost("register-admin")]
     public async Task<IActionResult> RegisterAsAdmin([FromBody] CredentialDto model)
