@@ -15,27 +15,19 @@ public class AuthController : ControllerBase
         _signInManager = signInManager;
     }
 
-    //[Authorize(Roles = "different")]
-    //[HttpGet("users")]
-    //public IActionResult GetAllUsers()
+    //[HttpPost("register")]
+    //public async Task<IActionResult> Register([FromBody] CredentialDto model)
     //{
-    //    var users = _userManager.Users.Select(u => new { u.Id, u.Email });
-    //    return Ok(users);
+    //    var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+    //    var result = await _userManager.CreateAsync(user, model.Password);
+
+    //    if (result.Succeeded)
+    //    {
+    //        return Ok("User registered successfully.");
+    //    }
+
+    //    return BadRequest(result.Errors);
     //}
-
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] CredentialDto model)
-    {
-        var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-        var result = await _userManager.CreateAsync(user, model.Password);
-
-        if (result.Succeeded)
-        {
-            return Ok("User registered successfully.");
-        }
-
-        return BadRequest(result.Errors);
-    }
 
     [HttpPost("register-member")]
     public async Task<IActionResult> RegisterAsMember([FromBody] CredentialDto model)
@@ -61,20 +53,22 @@ public class AuthController : ControllerBase
         if (result.Succeeded)
         {
             await _userManager.AddToRoleAsync(user, "Admin");
-            return Ok("User registered successfully.");
+            return Ok("User registered successfully."); 
         }
 
         return BadRequest(result.Errors);
     }
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] CredentialDto model)
+    [HttpPost("login-token")]
+    public async Task<IActionResult> LoginForToken([FromBody] CredentialDto model)
     {
-        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
-
-        if (result.Succeeded)
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
         {
-            return Ok("Logged in successfully.");
+            var roles = _userManager.GetRolesAsync(user);
+            var result = TokenHelper.GenerateToken(user, roles.Result.ToList());
+
+            return Ok(result);
         }
 
         return Unauthorized("Invalid email or password.");
