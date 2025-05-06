@@ -73,6 +73,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddScoped<Utils>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

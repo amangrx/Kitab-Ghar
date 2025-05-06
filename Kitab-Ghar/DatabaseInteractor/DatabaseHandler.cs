@@ -84,7 +84,7 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Name = "Alice Smith",
                 Address = "123 Main St",
                 Email = "alice@example.com",
-                Password = "hashedpassword1",
+                //Password = "hashedpassword1",
                 MembershipId = "M12345",
                 Role = "Reader"
             },
@@ -94,7 +94,7 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Name = "Bob Johnson",
                 Address = "456 Oak Ave",
                 Email = "bob@example.com",
-                Password = "hashedpassword2",
+                //Password = "hashedpassword2",
                 MembershipId = "M12346",
                 Role = "Reader"
             }
