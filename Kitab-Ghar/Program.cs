@@ -75,6 +75,20 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<Utils>();
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -88,6 +102,7 @@ app.UseHttpsRedirection();
 
 // Apply the CORS policy BEFORE authorization
 app.UseCors("AllowFrontend");
+
 
 app.UseAuthorization();
 
