@@ -5,40 +5,66 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    private readonly DatabaseHandler _context;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly Utils _utils;
 
     public AuthController(UserManager<IdentityUser> userManager,
-                          SignInManager<IdentityUser> signInManager)
+                          SignInManager<IdentityUser> signInManager,
+                          DatabaseHandler context,
+                          Utils utils)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _context = context;
+        _utils = utils;
     }
 
-    //[HttpPost("register")]
-    //public async Task<IActionResult> Register([FromBody] CredentialDto model)
-    //{
-    //    var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-    //    var result = await _userManager.CreateAsync(user, model.Password);
-
-    //    if (result.Succeeded)
-    //    {
-    //        return Ok("User registered successfully.");
-    //    }
-
-    //    return BadRequest(result.Errors);
-    //}
-
     [HttpPost("register-member")]
-    public async Task<IActionResult> RegisterAsMember([FromBody] CredentialDto model)
+    public async Task<IActionResult> RegisterAsMember([FromBody] RegisterMemberModel model)
     {
-        var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-        var result = await _userManager.CreateAsync(user, model.Password);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
+        {
+            return BadRequest("Email is already registered.");
+        }
+
+        var identityUser = new IdentityUser
+        {
+            UserName = model.Email,
+            Email = model.Email
+        };
+
+        var result = await _userManager.CreateAsync(identityUser, model.Password);
 
         if (result.Succeeded)
         {
-            await _userManager.AddToRoleAsync(user, "Member");
-            return Ok("Member registered successfully.");
+            var membershipId = await _utils.GenerateMembershipId(_context);
+
+            var userProfile = new User
+            {
+                Name = model.Name,
+                Address = model.Address,
+                Email = model.Email,
+                MembershipId = membershipId,
+                Role = "Member"
+            };
+
+            _context.Users.Add(userProfile);
+            await _context.SaveChangesAsync();
+
+            await _userManager.AddToRoleAsync(identityUser, "Member");
+
+            return Ok(new
+            {
+                Message = "Member registered successfully.",
+            });
         }
 
         return BadRequest(result.Errors);
@@ -53,7 +79,7 @@ public class AuthController : ControllerBase
         if (result.Succeeded)
         {
             await _userManager.AddToRoleAsync(user, "Admin");
-            return Ok("User registered successfully."); 
+            return Ok("User registered successfully.");
         }
 
         return BadRequest(result.Errors);
