@@ -12,6 +12,12 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
     public DbSet<Discount> Discounts { get; set; }
     public DbSet<Announcement> Announcements { get; set; }
 
+    public DbSet<Cart> Carts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Bill> Bills { get; set; }
+
     public DatabaseHandler(DbContextOptions<DatabaseHandler> options)
         : base(options)
     {
@@ -27,55 +33,117 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
         modelBuilder.Entity<Review>().HasKey(r => r.Id);
         modelBuilder.Entity<Discount>().HasKey(d => d.Id);
         modelBuilder.Entity<Announcement>().HasKey(a => a.Id);
+        modelBuilder.Entity<Cart>().HasKey(c => c.Id);
+        modelBuilder.Entity<CartItem>().HasKey(ci => ci.Id);
+        modelBuilder.Entity<Order>().HasKey(o => o.Id);
+        modelBuilder.Entity<OrderItem>().HasKey(oi => oi.Id);
+        modelBuilder.Entity<Bill>().HasKey(b => b.Id);
         #endregion
 
         #region Relationships
 
-        // Book - Review (1 to many)
+        // Book - Review
         modelBuilder.Entity<Book>()
             .HasMany(b => b.Reviews)
             .WithOne(r => r.Book)
             .HasForeignKey(r => r.BookId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // User - Review (1 to many)
+        // User - Review
         modelBuilder.Entity<User>()
             .HasMany(u => u.Reviews)
             .WithOne(r => r.User)
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Book - Bookmark (1 to many)
+        // Book - Bookmark
         modelBuilder.Entity<Book>()
             .HasMany(b => b.Bookmarks)
             .WithOne(bm => bm.Book)
             .HasForeignKey(bm => bm.BookId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // User - Bookmark (1 to many)
+        // User - Bookmark
         modelBuilder.Entity<User>()
             .HasMany(u => u.Bookmarks)
             .WithOne(bm => bm.User)
             .HasForeignKey(bm => bm.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Book - Discount (1 to many)
+        // Book - Discount
         modelBuilder.Entity<Book>()
             .HasMany(b => b.Discounts)
             .WithOne(d => d.Book)
             .HasForeignKey(d => d.BookId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // User - Claim (1 to many)
+        // User - Claim
         modelBuilder.Entity<User>()
             .HasMany(u => u.Claims)
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // User - Cart
+        modelBuilder.Entity<User>()
+            .HasMany<Cart>()
+            .WithOne(c => c.User)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Cart - CartItem
+        modelBuilder.Entity<Cart>()
+            .HasMany(c => c.CartItems)
+            .WithOne(ci => ci.Cart)
+            .HasForeignKey(ci => ci.CartId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Book - CartItem
+        modelBuilder.Entity<Book>()
+            .HasMany<CartItem>()
+            .WithOne(ci => ci.Book)
+            .HasForeignKey(ci => ci.BookId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // User - Order
+        modelBuilder.Entity<User>()
+            .HasMany<Order>()
+            .WithOne(o => o.User)
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Order - OrderItem
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.OrderItems)
+            .WithOne(oi => oi.Order)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Book - OrderItem
+        modelBuilder.Entity<Book>()
+            .HasMany<OrderItem>()
+            .WithOne(oi => oi.Book)
+            .HasForeignKey(oi => oi.BookId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // User - Bill
+        modelBuilder.Entity<User>()
+            .HasMany<Bill>()
+            .WithOne(b => b.User)
+            .HasForeignKey(b => b.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Order - Bill
+        modelBuilder.Entity<Order>()
+            .HasOne<Bill>()
+            .WithOne(b => b.Order)
+            .HasForeignKey<Bill>(b => b.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         #endregion
 
-        #region Optional: Seed Data (Example only)
-        // add initial value here
+        #region Seed Data 
+
         // Seed Users
         modelBuilder.Entity<User>().HasData(
             new User
@@ -212,6 +280,70 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Type = "Update"
             }
         );
+
+        // Seed Carts
+        modelBuilder.Entity<Cart>().HasData(
+            new Cart
+            {
+                Id = 1,
+                UserId = 1
+            },
+            new Cart
+            {
+                Id = 2,
+                UserId = 2
+            }
+        );
+
+        // Seed CartItems
+        modelBuilder.Entity<CartItem>().HasData(
+            new CartItem
+            {
+                Id = 1,
+                CartId = 1,
+                BookId = 1,
+                Quantity = 1
+            },
+            new CartItem
+            {
+                Id = 2,
+                CartId = 2,
+                BookId = 2,
+                Quantity = 2
+            }
+        );
+
+        modelBuilder.Entity<Order>().HasData(
+            new Order
+            {
+                Id = 1,
+                UserId = 1,
+                Date = new DateTime(2025, 5, 1),
+                TotalAmount = 25.49m,
+                Status = "Processing"
+            }
+        );
+
+        modelBuilder.Entity<OrderItem>().HasData(
+            new OrderItem
+            {
+                Id = 1,
+                OrderId = 1,
+                BookId = 1,
+                Quantity = 1
+            }
+        );
+
+        modelBuilder.Entity<Bill>().HasData(
+            new Bill
+            {
+                Id = 1,
+                UserId = 1,
+                OrderId = 1,
+                Amount = 25.49m
+            }
+        );
+
 
         #endregion
 

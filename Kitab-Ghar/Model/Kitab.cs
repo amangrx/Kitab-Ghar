@@ -147,3 +147,92 @@ public class Announcement
     public DateTimeOffset AnnouncementTime { get; set; }
 }
 
+
+
+// Cart Entity
+public class Cart
+{
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey("User")]
+    public int UserId { get; set; }
+
+    public DateTimeOffset Date { get; set; }
+
+    public User User { get; set; }
+    public List<CartItem> CartItems { get; set; }
+}
+
+// CartItem Entity
+public class CartItem
+{
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey("Cart")]
+    public int CartId { get; set; }
+
+    [ForeignKey("Book")]
+    public int BookId { get; set; }
+
+    public int Quantity { get; set; }
+
+    public Cart Cart { get; set; }
+    public Book Book { get; set; }
+}
+
+// Order Entity
+public class Order
+{
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey("User")]
+    public int UserId { get; set; }
+
+    public string Status { get; set; }
+
+    public decimal TotalAmount { get; set; }
+
+    public DateTimeOffset Date { get; set; }
+
+    public User User { get; set; }
+    public List<OrderItem> OrderItems { get; set; }
+}
+
+// OrderItem Entity
+public class OrderItem
+{
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey("Order")]
+    public int OrderId { get; set; }
+
+    [ForeignKey("Book")]
+    public int BookId { get; set; }
+
+    public int Quantity { get; set; }
+
+    public Order Order { get; set; }
+    public Book Book { get; set; }
+}
+
+// Bill Entity
+public class Bill
+{
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey("Order")]
+    public int OrderId { get; set; }
+
+    [ForeignKey("User")]
+    public int UserId { get; set; }
+
+    public decimal Amount { get; set; }
+
+    public Order Order { get; set; }
+    public User User { get; set; }
+}
