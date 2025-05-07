@@ -25,6 +25,7 @@ public class Book
     public string Format { get; set; }
 
     public string Tags { get; set; } // optionally as comma-separated or related Tag entity
+    public string Image { get; set; }
 
     public List<Review> Reviews { get; set; }
     public List<Bookmark> Bookmarks { get; set; }
@@ -41,6 +42,7 @@ public class User
     public string Name { get; set; }
     public string Address { get; set; }
 
+
     [Required]
     [EmailAddress]
     public string Email { get; set; }
@@ -51,6 +53,7 @@ public class User
     //public string Password { get; set; }
 
     public string MembershipId { get; set; }
+    public string Image { get; set; }
 
     public string Role { get; set; }
 

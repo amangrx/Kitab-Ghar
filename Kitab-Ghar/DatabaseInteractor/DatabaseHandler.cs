@@ -86,11 +86,10 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Email = "alice@example.com",
                 //Password = "hashedpassword1",
                 MembershipId = "M12345",
-<<<<<<< Updated upstream
+
                 Role = "Reader"
-=======
-                Role = "Reader",
->>>>>>> Stashed changes
+
+
             },
             new User
             {
@@ -100,11 +99,9 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Email = "bob@example.com",
                 //Password = "hashedpassword2",
                 MembershipId = "M12346",
-<<<<<<< Updated upstream
+
                 Role = "Reader"
-=======
-                Role = "Reader",
->>>>>>> Stashed changes
+
             }
         );
 
@@ -123,7 +120,8 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Availability = true,
                 ISBN = "123-4567890123",
                 Format = "Paperback",
-                Tags = "coding,software,programming"
+                Tags = "coding,software,programming",
+                Image = ""
             },
             new Book
             {
@@ -138,7 +136,8 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Availability = true,
                 ISBN = "456-7891234567",
                 Format = "Hardcover",
-                Tags = "psychology,mind,science"
+                Tags = "psychology,mind,science",
+                Image = ""
             }
         );
 
