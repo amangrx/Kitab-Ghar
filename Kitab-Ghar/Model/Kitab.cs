@@ -24,7 +24,7 @@ public class Book
     public DateTime PublicationDate { get; set; }
     public string Format { get; set; }
 
-    public string Tags { get; set; } // optionally as comma-separated or related Tag entity
+    public string Tags { get; set; } 
     public string Image { get; set; }
 
     public List<Review> Reviews { get; set; }
@@ -53,7 +53,6 @@ public class User
     //public string Password { get; set; }
 
     public string MembershipId { get; set; }
-    public string Image { get; set; }
 
     public string Role { get; set; }
 
@@ -147,3 +146,4 @@ public class Announcement
     // Changed to DateTimeOffset to handle time zone
     public DateTimeOffset AnnouncementTime { get; set; }
 }
+

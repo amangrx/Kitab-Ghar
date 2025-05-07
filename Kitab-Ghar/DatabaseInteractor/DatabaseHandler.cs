@@ -89,7 +89,6 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
 
                 Role = "Reader"
 
-
             },
             new User
             {
