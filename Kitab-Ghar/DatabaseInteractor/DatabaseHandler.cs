@@ -86,8 +86,10 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Email = "alice@example.com",
                 //Password = "hashedpassword1",
                 MembershipId = "M12345",
-                Role = "Reader",
-                Image = ""
+
+                Role = "Reader"
+
+
             },
             new User
             {
@@ -97,8 +99,9 @@ public class DatabaseHandler : IdentityDbContext<IdentityUser>
                 Email = "bob@example.com",
                 //Password = "hashedpassword2",
                 MembershipId = "M12346",
-                Role = "Reader",
-                Image = ""
+
+                Role = "Reader"
+
             }
         );
 
