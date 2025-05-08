@@ -19,19 +19,24 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Cart
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
+        public async Task<ActionResult<IEnumerable<CartDTO>>> GetCarts()
         {
-            return await _context.Carts.ToListAsync();
+            var carts = await _context.Carts.ToListAsync();
+            var cartDTOs = carts.Select(c => new CartDTO
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                Date = c.Date
+            }).ToList();
+
+            return cartDTOs;
         }
 
         // GET: api/Cart/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cart>> GetCart(int id)
+        public async Task<ActionResult<CartDTO>> GetCart(int id)
         {
             var cart = await _context.Carts
-                .Include(c => c.User)
-                .Include(c => c.CartItems)
-                    .ThenInclude(ci => ci.Book)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (cart == null)
@@ -39,28 +44,51 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return cart;
+            var cartDTO = new CartDTO
+            {
+                Id = cart.Id,
+                UserId = cart.UserId,
+                Date = cart.Date
+            };
+
+            return cartDTO;
         }
 
         // POST: api/Cart
         [HttpPost]
-        public async Task<ActionResult<Cart>> PostCart(Cart cart)
+        public async Task<ActionResult<CartDTO>> PostCart(CartDTO cartDTO)
         {
-            cart.Date = DateTimeOffset.UtcNow;
+            var cart = new Cart
+            {
+                UserId = cartDTO.UserId,
+                Date = cartDTO.Date
+            };
+
             _context.Carts.Add(cart);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCart), new { id = cart.Id }, cart);
+            cartDTO.Id = cart.Id;
+
+            return CreatedAtAction(nameof(GetCart), new { id = cart.Id }, cartDTO);
         }
 
         // PUT: api/Cart/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCart(int id, Cart cart)
+        public async Task<IActionResult> PutCart(int id, CartDTO cartDTO)
         {
-            if (id != cart.Id)
+            if (id != cartDTO.Id)
             {
                 return BadRequest();
             }
+
+            var cart = await _context.Carts.FindAsync(id);
+            if (cart == null)
+            {
+                return NotFound();
+            }
+
+            cart.UserId = cartDTO.UserId;
+            cart.Date = cartDTO.Date;
 
             _context.Entry(cart).State = EntityState.Modified;
 
@@ -103,5 +131,12 @@ namespace Kitab_Ghar.Controllers
         {
             return _context.Carts.Any(c => c.Id == id);
         }
+    }
+
+    public class CartDTO
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public DateTimeOffset Date { get; set; }
     }
 }

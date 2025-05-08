@@ -19,18 +19,24 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/CartItem
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CartItem>>> GetCartItems()
+        public async Task<ActionResult<IEnumerable<CartItemDTO>>> GetCartItems()
         {
-            return await _context.CartItems.ToListAsync();
+            var cartItems = await _context.CartItems.ToListAsync();
+            var cartItemDTOs = cartItems.Select(ci => new CartItemDTO
+            {
+                Id = ci.Id,
+                BookId = ci.BookId,
+                Quantity = ci.Quantity
+            }).ToList();
+
+            return cartItemDTOs;
         }
 
         // GET: api/CartItem/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<CartItem>> GetCartItem(int id)
+        public async Task<ActionResult<CartItemDTO>> GetCartItem(int id)
         {
             var cartItem = await _context.CartItems
-                .Include(ci => ci.Book)
-                .Include(ci => ci.Cart)
                 .FirstOrDefaultAsync(ci => ci.Id == id);
 
             if (cartItem == null)
@@ -38,27 +44,52 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return cartItem;
+            var cartItemDTO = new CartItemDTO
+            {
+                Id = cartItem.Id,
+                BookId = cartItem.BookId,
+                Quantity = cartItem.Quantity
+            };
+
+            return cartItemDTO;
         }
 
         // POST: api/CartItem
         [HttpPost]
-        public async Task<ActionResult<CartItem>> PostCartItem(CartItem cartItem)
+        public async Task<ActionResult<CartItemDTO>> PostCartItem(CartItemDTO cartItemDTO)
         {
+            var cartItem = new CartItem
+            {
+                BookId = cartItemDTO.BookId,
+                CartId = GetCartIdFromBookId(cartItemDTO.BookId), // You may need to implement this method
+                Quantity = cartItemDTO.Quantity
+            };
+
             _context.CartItems.Add(cartItem);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCartItem), new { id = cartItem.Id }, cartItem);
+            cartItemDTO.Id = cartItem.Id;
+
+            return CreatedAtAction(nameof(GetCartItem), new { id = cartItem.Id }, cartItemDTO);
         }
 
         // PUT: api/CartItem/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCartItem(int id, CartItem cartItem)
+        public async Task<IActionResult> PutCartItem(int id, CartItemDTO cartItemDTO)
         {
-            if (id != cartItem.Id)
+            if (id != cartItemDTO.Id)
             {
                 return BadRequest();
             }
+
+            var cartItem = await _context.CartItems.FindAsync(id);
+            if (cartItem == null)
+            {
+                return NotFound();
+            }
+
+            cartItem.BookId = cartItemDTO.BookId;
+            cartItem.Quantity = cartItemDTO.Quantity;
 
             _context.Entry(cartItem).State = EntityState.Modified;
 
@@ -100,6 +131,11 @@ namespace Kitab_Ghar.Controllers
         private bool CartItemExists(int id)
         {
             return _context.CartItems.Any(ci => ci.Id == id);
+        }
+
+        private int GetCartIdFromBookId(int bookId)
+        {
+            return 1;
         }
     }
 }

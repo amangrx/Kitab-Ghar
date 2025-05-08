@@ -146,8 +146,6 @@ public class Announcement
     public DateTimeOffset AnnouncementTime { get; set; }
 }
 
-
-
 // Cart Entity
 public class Cart
 {
