@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,14 +11,47 @@ public static class TokenHelper
     public static string Issuer = string.Empty;
     public static string Audience = string.Empty;
 
-    public static object GenerateToken(IdentityUser user, List<string> roles)
+    public static async Task<object> GenerateToken(
+        IdentityUser user,
+        List<string> roles,
+        DatabaseHandler dbContext)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new List<Claim>();
+        // Fetch user profile 
+        var userProfile = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == user.Email);
 
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        var claims = new List<Claim>
+        {
+            new Claim("sub", user.Id),  
+            new Claim("email", user.Email),
+            new Claim("jti", Guid.NewGuid().ToString())
+        };
+
+        // Add profile claims 
+        if (userProfile != null)
+        {
+            if (!string.IsNullOrEmpty(userProfile.Name))
+            {
+                claims.Add(new Claim("name", userProfile.Name)); 
+                claims.Add(new Claim("given_name", userProfile.Name));  
+            }
+
+            if (!string.IsNullOrEmpty(userProfile.Address))
+            {
+                claims.Add(new Claim("address", userProfile.Address));  
+            }
+
+            if (!string.IsNullOrEmpty(userProfile.MembershipId))
+            {
+                claims.Add(new Claim("membership_id", userProfile.MembershipId));
+            }
+        }
+
+        // Add roles 
+        claims.AddRange(roles.Select(role => new Claim("role", role)));  
 
         var token = new JwtSecurityToken(
             issuer: Issuer,
@@ -26,31 +60,11 @@ public static class TokenHelper
             expires: DateTime.UtcNow.AddMinutes(30),
             signingCredentials: creds
         );
-        var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
 
         return new
         {
-            token = jwtToken,
-            email = user.Email
-        };
-    }
-    public static object GenerateToken(IdentityUser user)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: Issuer,
-            audience: Audience,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds
-        );
-        var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-        return new
-        {
-            token = jwtToken,
-            email = user.Email
+            token = new JwtSecurityTokenHandler().WriteToken(token),
+            userId = user.Id
         };
     }
 }
