@@ -131,7 +131,7 @@ public class BooksController : ControllerBase
 
     // GET: api/Books/search
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null, bool? availability = null)
+    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null)
     {
         var query = _context.Books.AsQueryable();
 
@@ -144,6 +144,30 @@ public class BooksController : ControllerBase
         {
             query = query.Where(b => b.ISBN.Contains(isbn));
         }
+
+        var books = await query.ToListAsync();
+
+        return books.Select(b => ToDTO(b)).ToList();
+    }
+
+    // GET: api/Books/filter
+    [HttpGet("filter")]
+    public async Task<ActionResult<IEnumerable<BookDTO>>> FilterBooks(
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        bool? availability = null)
+    {
+        var query = _context.Books.AsQueryable();
+
+        // Apply price filters if parameters are provided
+        if (minPrice.HasValue)
+        {
+            query = query.Where(b => b.Price >= minPrice);
+        }
+        if (maxPrice.HasValue)
+        {
+            query = query.Where(b => b.Price <= maxPrice);
+        }
         if (availability.HasValue)
         {
             query = query.Where(b => b.Availability == availability);
@@ -153,4 +177,5 @@ public class BooksController : ControllerBase
 
         return books.Select(b => ToDTO(b)).ToList();
     }
+
 }
