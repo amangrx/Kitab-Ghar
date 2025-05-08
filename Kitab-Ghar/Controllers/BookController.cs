@@ -128,4 +128,29 @@ public class BooksController : ControllerBase
         Availability = dto.Availability,
         ISBN = dto.ISBN
     };
+
+    // GET: api/Books/search
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null, bool? availability = null)
+    {
+        var query = _context.Books.AsQueryable();
+
+        // Apply filters if parameters are provided
+        if (!string.IsNullOrEmpty(title))
+        {
+            query = query.Where(b => b.Title.Contains(title));
+        }
+        if (!string.IsNullOrEmpty(isbn))
+        {
+            query = query.Where(b => b.ISBN.Contains(isbn));
+        }
+        if (availability.HasValue)
+        {
+            query = query.Where(b => b.Availability == availability);
+        }
+
+        var books = await query.ToListAsync();
+
+        return books.Select(b => ToDTO(b)).ToList();
+    }
 }
