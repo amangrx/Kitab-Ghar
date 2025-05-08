@@ -21,11 +21,7 @@ namespace Kitab_Ghar.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
         {
-            return await _context.Carts
-                .Include(c => c.User)
-                .Include(c => c.CartItems)
-                    .ThenInclude(ci => ci.Book)
-                .ToListAsync();
+            return await _context.Carts.ToListAsync();
         }
 
         // GET: api/Cart/5
