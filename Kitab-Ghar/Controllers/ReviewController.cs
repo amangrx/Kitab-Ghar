@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Kitab_Ghar.Controllers
 {
@@ -19,17 +19,28 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Review
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReviews()
+        public async Task<ActionResult<IEnumerable<ReviewDTO>>> GetReviews()
         {
-            return await _context.Reviews
+            var reviews = await _context.Reviews
                 .Include(r => r.Book)
                 .Include(r => r.User)
                 .ToListAsync();
+
+            var reviewDTOs = reviews.Select(r => new ReviewDTO
+            {
+                Id = r.Id,
+                BookId = r.BookId,
+                Comment = r.Comment,
+                Rating = r.Rating,
+                ReviewDate = r.ReviewDate
+            }).ToList();
+
+            return Ok(reviewDTOs);
         }
 
         // GET: api/Review/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Review>> GetReview(int id)
+        public async Task<ActionResult<ReviewDTO>> GetReview(int id)
         {
             var review = await _context.Reviews
                 .Include(r => r.Book)
@@ -41,18 +52,36 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return review;
+            var reviewDTO = new ReviewDTO
+            {
+                Id = review.Id,
+                BookId = review.BookId,
+                Comment = review.Comment,
+                Rating = review.Rating,
+                ReviewDate = review.ReviewDate
+            };
+
+            return Ok(reviewDTO);
         }
 
         // POST: api/Review
         [HttpPost]
-        public async Task<ActionResult<Review>> PostReview(Review review)
+        public async Task<ActionResult<ReviewDTO>> PostReview(Review review)
         {
             review.ReviewDate = DateTime.UtcNow;
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetReview), new { id = review.Id }, review);
+            var reviewDTO = new ReviewDTO
+            {
+                Id = review.Id,
+                BookId = review.BookId,
+                Comment = review.Comment,
+                Rating = review.Rating,
+                ReviewDate = review.ReviewDate
+            };
+
+            return CreatedAtAction(nameof(GetReview), new { id = review.Id }, reviewDTO);
         }
 
         // PUT: api/Review/5

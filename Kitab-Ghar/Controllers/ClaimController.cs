@@ -19,47 +19,53 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Claim
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Claims>>> GetClaims()
+        public async Task<ActionResult<IEnumerable<ClaimDTO>>> GetClaims()
         {
-            return await _context.Claims
-                .Include(c => c.User)
-                .ToListAsync();
+            var claims = await _context.Claims.ToListAsync();
+            return claims.Select(c => ToDTO(c)).ToList();
         }
 
         // GET: api/Claim/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Claims>> GetClaim(int id)
+        public async Task<ActionResult<ClaimDTO>> GetClaim(int id)
         {
-            var claim = await _context.Claims
-                .Include(c => c.User)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var claim = await _context.Claims.FindAsync(id);
 
             if (claim == null)
             {
                 return NotFound();
             }
 
-            return claim;
+            return ToDTO(claim);
         }
 
         // POST: api/Claim
         [HttpPost]
-        public async Task<ActionResult<Claims>> PostClaim(Claims claim)
+        public async Task<ActionResult<ClaimDTO>> PostClaim(ClaimDTO dto)
         {
+            var claim = FromDTO(dto);
             _context.Claims.Add(claim);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetClaim), new { id = claim.Id }, claim);
+            return CreatedAtAction(nameof(GetClaim), new { id = claim.Id }, ToDTO(claim));
         }
 
         // PUT: api/Claim/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutClaim(int id, Claims claim)
+        public async Task<IActionResult> PutClaim(int id, ClaimDTO dto)
         {
-            if (id != claim.Id)
+            if (id != dto.Id)
             {
                 return BadRequest();
             }
+
+            var claim = await _context.Claims.FindAsync(id);
+            if (claim == null)
+            {
+                return NotFound();
+            }
+
+            claim.ClaimCode = dto.ClaimCode;
 
             _context.Entry(claim).State = EntityState.Modified;
 
@@ -102,5 +108,18 @@ namespace Kitab_Ghar.Controllers
         {
             return _context.Claims.Any(c => c.Id == id);
         }
+
+        // Mapping Methods
+        private static ClaimDTO ToDTO(Claims claim) => new ClaimDTO
+        {
+            Id = claim.Id,
+            ClaimCode = claim.ClaimCode
+        };
+
+        private static Claims FromDTO(ClaimDTO dto) => new Claims
+        {
+            Id = dto.Id,
+            ClaimCode = dto.ClaimCode
+        };
     }
 }

@@ -19,20 +19,20 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Bill
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Bill>>> GetBills()
+        public async Task<ActionResult<IEnumerable<BillDTO>>> GetBills()
         {
-            return await _context.Bills
-                .Include(b => b.User)
+            var bills = await _context.Bills
                 .Include(b => b.Order)
                 .ToListAsync();
+
+            return bills.Select(b => ToDTO(b)).ToList();
         }
 
         // GET: api/Bill/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Bill>> GetBill(int id)
+        public async Task<ActionResult<BillDTO>> GetBill(int id)
         {
             var bill = await _context.Bills
-                .Include(b => b.User)
                 .Include(b => b.Order)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
@@ -41,27 +41,37 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return bill;
+            return ToDTO(bill);
         }
 
         // POST: api/Bill
         [HttpPost]
-        public async Task<ActionResult<Bill>> PostBill(Bill bill)
+        public async Task<ActionResult<BillDTO>> PostBill(BillDTO billDto)
         {
+            var bill = FromDTO(billDto);
             _context.Bills.Add(bill);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetBill), new { id = bill.Id }, bill);
+            return CreatedAtAction(nameof(GetBill), new { id = bill.Id }, ToDTO(bill));
         }
 
         // PUT: api/Bill/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutBill(int id, Bill bill)
+        public async Task<IActionResult> PutBill(int id, BillDTO billDto)
         {
-            if (id != bill.Id)
+            if (id != billDto.Id)
             {
                 return BadRequest();
             }
+
+            var bill = await _context.Bills.FindAsync(id);
+            if (bill == null)
+            {
+                return NotFound();
+            }
+
+            bill.OrderId = billDto.OrderId;
+            bill.Amount = billDto.Amount;
 
             _context.Entry(bill).State = EntityState.Modified;
 
@@ -104,5 +114,20 @@ namespace Kitab_Ghar.Controllers
         {
             return _context.Bills.Any(b => b.Id == id);
         }
+
+        // Mapping Helpers
+        private static BillDTO ToDTO(Bill bill) => new BillDTO
+        {
+            Id = bill.Id,
+            OrderId = bill.OrderId,
+            Amount = bill.Amount
+        };
+
+        private static Bill FromDTO(BillDTO dto) => new Bill
+        {
+            Id = dto.Id,
+            OrderId = dto.OrderId,
+            Amount = dto.Amount
+        };
     }
 }

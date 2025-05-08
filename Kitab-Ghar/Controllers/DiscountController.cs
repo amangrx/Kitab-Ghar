@@ -19,19 +19,28 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Discount
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Discount>>> GetDiscounts()
+        public async Task<ActionResult<IEnumerable<DiscountDTO>>> GetDiscounts()
         {
-            return await _context.Discounts
-                .Include(d => d.Book)
+            var discounts = await _context.Discounts
+                .Include(d => d.Book) // Include the related Book
                 .ToListAsync();
+
+            var discountDTOs = discounts.Select(d => new DiscountDTO
+            {
+                Id = d.Id,
+                DiscountPercent = d.DiscountPercent,
+                OnSale = d.OnSale,
+            }).ToList();
+
+            return Ok(discountDTOs);
         }
 
         // GET: api/Discount/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Discount>> GetDiscount(int id)
+        public async Task<ActionResult<DiscountDTO>> GetDiscount(int id)
         {
             var discount = await _context.Discounts
-                .Include(d => d.Book)
+                .Include(d => d.Book) // Include the related Book
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (discount == null)
@@ -39,17 +48,31 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return discount;
+            var discountDTO = new DiscountDTO
+            {
+                Id = discount.Id,
+                DiscountPercent = discount.DiscountPercent,
+                OnSale = discount.OnSale
+            };
+
+            return Ok(discountDTO);
         }
 
         // POST: api/Discount
         [HttpPost]
-        public async Task<ActionResult<Discount>> PostDiscount(Discount discount)
+        public async Task<ActionResult<DiscountDTO>> PostDiscount(Discount discount)
         {
             _context.Discounts.Add(discount);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetDiscount), new { id = discount.Id }, discount);
+            var discountDTO = new DiscountDTO
+            {
+                Id = discount.Id,
+                DiscountPercent = discount.DiscountPercent,
+                OnSale = discount.OnSale
+            };
+
+            return CreatedAtAction(nameof(GetDiscount), new { id = discount.Id }, discountDTO);
         }
 
         // PUT: api/Discount/5

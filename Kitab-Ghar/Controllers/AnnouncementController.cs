@@ -19,14 +19,15 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Announcement
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Announcement>>> GetAnnouncements()
+        public async Task<ActionResult<IEnumerable<AnnouncementDTO>>> GetAnnouncements()
         {
-            return await _context.Announcements.ToListAsync();
+            var announcements = await _context.Announcements.ToListAsync();
+            return announcements.Select(a => ToDTO(a)).ToList();
         }
 
         // GET: api/Announcement/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Announcement>> GetAnnouncement(int id)
+        public async Task<ActionResult<AnnouncementDTO>> GetAnnouncement(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
 
@@ -35,28 +36,40 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return announcement;
+            return ToDTO(announcement);
         }
 
         // POST: api/Announcement
         [HttpPost]
-        public async Task<ActionResult<Announcement>> PostAnnouncement(Announcement announcement)
+        public async Task<ActionResult<AnnouncementDTO>> PostAnnouncement(AnnouncementDTO dto)
         {
-            announcement.AnnouncementTime = DateTime.UtcNow;
+            var announcement = FromDTO(dto);
+            announcement.AnnouncementTime = DateTimeOffset.UtcNow;
+
             _context.Announcements.Add(announcement);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAnnouncement), new { id = announcement.Id }, announcement);
+            return CreatedAtAction(nameof(GetAnnouncement), new { id = announcement.Id }, ToDTO(announcement));
         }
 
         // PUT: api/Announcement/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAnnouncement(int id, Announcement announcement)
+        public async Task<IActionResult> PutAnnouncement(int id, AnnouncementDTO dto)
         {
-            if (id != announcement.Id)
+            if (id != dto.Id)
             {
                 return BadRequest();
             }
+
+            var announcement = await _context.Announcements.FindAsync(id);
+            if (announcement == null)
+            {
+                return NotFound();
+            }
+
+            announcement.Message = dto.Message;
+            announcement.Type = dto.Type;
+            announcement.AnnouncementTime = dto.AnnouncementTime;
 
             _context.Entry(announcement).State = EntityState.Modified;
 
@@ -99,5 +112,22 @@ namespace Kitab_Ghar.Controllers
         {
             return _context.Announcements.Any(e => e.Id == id);
         }
+
+        // Mapping Helpers
+        private static AnnouncementDTO ToDTO(Announcement a) => new AnnouncementDTO
+        {
+            Id = a.Id,
+            Message = a.Message,
+            Type = a.Type,
+            AnnouncementTime = a.AnnouncementTime
+        };
+
+        private static Announcement FromDTO(AnnouncementDTO dto) => new Announcement
+        {
+            Id = dto.Id,
+            Message = dto.Message,
+            Type = dto.Type,
+            AnnouncementTime = dto.AnnouncementTime
+        };
     }
 }

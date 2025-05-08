@@ -19,17 +19,26 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/OrderItem
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderItem>>> GetOrderItems()
+        public async Task<ActionResult<IEnumerable<OrderItemDTO>>> GetOrderItems()
         {
-            return await _context.OrderItems
+            var orderItems = await _context.OrderItems
                 .Include(oi => oi.Order)
                 .Include(oi => oi.Book)
                 .ToListAsync();
+
+            var orderItemDTOs = orderItems.Select(oi => new OrderItemDTO
+            {
+                Id = oi.Id,
+                BookId = oi.BookId,
+                Quantity = oi.Quantity
+            }).ToList();
+
+            return Ok(orderItemDTOs);
         }
 
         // GET: api/OrderItem/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<OrderItem>> GetOrderItem(int id)
+        public async Task<ActionResult<OrderItemDTO>> GetOrderItem(int id)
         {
             var orderItem = await _context.OrderItems
                 .Include(oi => oi.Order)
@@ -41,17 +50,31 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return orderItem;
+            var orderItemDTO = new OrderItemDTO
+            {
+                Id = orderItem.Id,
+                BookId = orderItem.BookId,
+                Quantity = orderItem.Quantity
+            };
+
+            return Ok(orderItemDTO);
         }
 
         // POST: api/OrderItem
         [HttpPost]
-        public async Task<ActionResult<OrderItem>> PostOrderItem(OrderItem orderItem)
+        public async Task<ActionResult<OrderItemDTO>> PostOrderItem(OrderItem orderItem)
         {
             _context.OrderItems.Add(orderItem);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetOrderItem), new { id = orderItem.Id }, orderItem);
+            var orderItemDTO = new OrderItemDTO
+            {
+                Id = orderItem.Id,
+                BookId = orderItem.BookId,
+                Quantity = orderItem.Quantity
+            };
+
+            return CreatedAtAction(nameof(GetOrderItem), new { id = orderItem.Id }, orderItemDTO);
         }
 
         // PUT: api/OrderItem/5

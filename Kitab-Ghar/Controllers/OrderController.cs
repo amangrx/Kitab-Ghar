@@ -19,17 +19,28 @@ namespace Kitab_Ghar.Controllers
 
         // GET: api/Order
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders()
         {
-            return await _context.Orders
+            var orders = await _context.Orders
                 .Include(o => o.OrderItems)
                 .Include(o => o.User)
                 .ToListAsync();
+
+            var orderDTOs = orders.Select(o => new OrderDTO
+            {
+                Id = o.Id,
+                UserId = o.UserId,
+                Status = o.Status,
+                TotalAmount = o.TotalAmount,
+                Date = o.Date
+            }).ToList();
+
+            return Ok(orderDTOs);
         }
 
         // GET: api/Order/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrder(int id)
+        public async Task<ActionResult<OrderDTO>> GetOrder(int id)
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
@@ -41,18 +52,36 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
-            return order;
+            var orderDTO = new OrderDTO
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                Date = order.Date
+            };
+
+            return Ok(orderDTO);
         }
 
         // POST: api/Order
         [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder(Order order)
+        public async Task<ActionResult<OrderDTO>> PostOrder(Order order)
         {
             order.Date = DateTimeOffset.UtcNow;
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+            var orderDTO = new OrderDTO
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                Date = order.Date
+            };
+
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDTO);
         }
 
         // PUT: api/Order/5
