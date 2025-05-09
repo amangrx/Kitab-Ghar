@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -104,5 +105,28 @@ public class AuthController : ControllerBase
         await _signInManager.SignOutAsync();
         return Ok("Logged out successfully.");
     }
-}
 
+    [Authorize]
+    [HttpGet("user")]
+    public async Task<IActionResult> GetUser()
+    {
+        try
+        {
+            var name = User.FindFirst("name")?.Value;
+            var role = User.FindFirst("role")?.Value;
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(role))
+            {
+                return Unauthorized("Required user information missing in token");
+            }
+            return Ok(new
+            {
+                Name = name,
+                Role = role
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+}

@@ -88,7 +88,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -109,6 +108,7 @@ app.UseHttpsRedirection();
 // Apply the CORS policy BEFORE authorization
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication();
 
 app.UseAuthorization();
 
