@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -108,25 +110,66 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("user")]
-    public async Task<IActionResult> GetUser()
+    public IActionResult GetUser()
     {
         try
         {
-            var name = User.FindFirst("name")?.Value;
-            var role = User.FindFirst("role")?.Value;
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(role))
+            // Get all claims - store as list of key-value pairs instead of dictionary
+            var allClaims = User.Claims
+                .Select(c => new { c.Type, c.Value })
+                .ToList();
+
+            // Get user ID - checking multiple claim types
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)  // System standard
+                      ?? User.FindFirstValue("sub")                     // JWT standard
+                      ?? User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"); // Legacy
+
+            // Get name - checking multiple claim types
+            var name = User.FindFirstValue(ClaimTypes.Name)            // System standard
+                    ?? User.FindFirstValue("name")                     // Common alternative
+                    ?? User.FindFirstValue("given_name");              // JWT standard
+
+            // Get role - checking multiple claim types
+            var role = User.FindFirstValue(ClaimTypes.Role)            // System standard
+                    ?? User.FindFirstValue("role")                     // Common alternative
+                    ?? User.FindFirstValue("http://schemas.microsoft.com/ws/2008/06/identity/claims/role"); // Legacy
+
+            if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized("Required user information missing in token");
+                return Unauthorized(new
+                {
+                    Message = "User identification missing",
+                    AvailableClaims = allClaims
+                });
             }
+
+            if (string.IsNullOrEmpty(role))
+            {
+                return Unauthorized(new
+                {
+                    Message = "Role information missing",
+                    AvailableClaims = allClaims
+                });
+            }
+
             return Ok(new
             {
-                Name = name,
-                Role = role
+                Id = userId,
+                Name = name?.Trim(),
+                Role = role,
+                Email = User.FindFirstValue(ClaimTypes.Email),
+                MembershipId = User.FindFirstValue("membership_id")
             });
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            // Log the error here if you have logging configured
+            return StatusCode(500, new
+            {
+                Message = "An error occurred while processing user information",
+                Error = ex.Message
+                // Note: Don't include stack trace in production
+            });
         }
     }
 }

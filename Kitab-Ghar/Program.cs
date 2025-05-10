@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,7 +70,10 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = TokenHelper.Issuer,
         ValidAudience = TokenHelper.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenHelper.SecretKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        // Correct claim type mappings:
+        NameClaimType = ClaimTypes.Name,       // Maps to User.Identity.Name
+        RoleClaimType = ClaimTypes.Role        // Maps to role claims
     };
 });
 
