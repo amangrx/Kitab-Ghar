@@ -58,6 +58,28 @@ namespace Kitab_Ghar.Controllers
         [HttpPost]
         public async Task<ActionResult<CartDTO>> PostCart(CartDTO cartDTO)
         {
+            if (cartDTO.UserId <= 0)
+            {
+                return BadRequest("A valid UserId must be provided.");
+            }
+
+            // Check if a cart already exists for this user
+            var existingCart = await _context.Carts
+                .FirstOrDefaultAsync(c => c.UserId == cartDTO.UserId);
+
+            if (existingCart != null)
+            {
+                // Return existing cart instead of creating a new one
+                var existingCartDTO = new CartDTO
+                {
+                    Id = existingCart.Id,
+                    UserId = existingCart.UserId,
+                    Date = existingCart.Date
+                };
+
+                return Ok(existingCartDTO); 
+            }
+
             var cart = new Cart
             {
                 UserId = cartDTO.UserId,

@@ -61,7 +61,7 @@ namespace Kitab_Ghar.Controllers
             var cartItem = new CartItem
             {
                 BookId = cartItemDTO.BookId,
-                CartId = GetCartIdFromBookId(cartItemDTO.BookId), // You may need to implement this method
+                CartId = GetCartIdFromBookId(cartItemDTO.BookId), 
                 Quantity = cartItemDTO.Quantity
             };
 
