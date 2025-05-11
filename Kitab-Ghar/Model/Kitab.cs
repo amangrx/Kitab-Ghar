@@ -1,7 +1,7 @@
-﻿// Book Entity
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
+// Book Entity
 public class Book
 {
     [Key]
