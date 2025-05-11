@@ -266,12 +266,14 @@
                 {
                     Id = 1,
                     Message = "Welcome to Kitab Ghar!",
+                    Title = "mega",
                     Type = "Info"
                 },
                 new Announcement
                 {
                     Id = 2,
                     Message = "New books have arrived!",
+                    Title = "mega",
                     Type = "Update"
                 }
             );

@@ -26,6 +26,7 @@ public class BookmarkDTO
 {
     public int Id { get; set; }
     public int BookId { get; set; }
+    public int UserId { get; set; }
 }
 
 public class ReviewDTO
