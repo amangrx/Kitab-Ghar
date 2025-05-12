@@ -21,70 +21,52 @@ namespace Kitab_Ghar.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrderItemDTO>>> GetOrderItems()
         {
-            var orderItems = await _context.OrderItems
-                .Include(oi => oi.Order)
-                .Include(oi => oi.Book)
-                .ToListAsync();
-
-            var orderItemDTOs = orderItems.Select(oi => new OrderItemDTO
-            {
-                Id = oi.Id,
-                BookId = oi.BookId,
-                Quantity = oi.Quantity
-            }).ToList();
-
-            return Ok(orderItemDTOs);
+            var orderItems = await _context.OrderItems.ToListAsync();
+            return orderItems.Select(oi => ToDTO(oi)).ToList();
         }
 
         // GET: api/OrderItem/5
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderItemDTO>> GetOrderItem(int id)
         {
-            var orderItem = await _context.OrderItems
-                .Include(oi => oi.Order)
-                .Include(oi => oi.Book)
-                .FirstOrDefaultAsync(oi => oi.Id == id);
+            var orderItem = await _context.OrderItems.FindAsync(id);
 
             if (orderItem == null)
             {
                 return NotFound();
             }
 
-            var orderItemDTO = new OrderItemDTO
-            {
-                Id = orderItem.Id,
-                BookId = orderItem.BookId,
-                Quantity = orderItem.Quantity
-            };
-
-            return Ok(orderItemDTO);
+            return ToDTO(orderItem);
         }
 
         // POST: api/OrderItem
         [HttpPost]
-        public async Task<ActionResult<OrderItemDTO>> PostOrderItem(OrderItem orderItem)
+        public async Task<ActionResult<OrderItemDTO>> PostOrderItem(OrderItemDTO orderItemDto)
         {
+            var orderItem = FromDTO(orderItemDto);
             _context.OrderItems.Add(orderItem);
             await _context.SaveChangesAsync();
 
-            var orderItemDTO = new OrderItemDTO
-            {
-                Id = orderItem.Id,
-                BookId = orderItem.BookId,
-                Quantity = orderItem.Quantity
-            };
-
-            return CreatedAtAction(nameof(GetOrderItem), new { id = orderItem.Id }, orderItemDTO);
+            return CreatedAtAction(nameof(GetOrderItem), new { id = orderItem.Id }, ToDTO(orderItem));
         }
 
         // PUT: api/OrderItem/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutOrderItem(int id, OrderItem orderItem)
+        public async Task<IActionResult> PutOrderItem(int id, OrderItemDTO orderItemDto)
         {
-            if (id != orderItem.Id)
+            if (id != orderItemDto.Id)
             {
                 return BadRequest();
             }
+
+            var orderItem = await _context.OrderItems.FindAsync(id);
+            if (orderItem == null)
+            {
+                return NotFound();
+            }
+
+            orderItem.BookId = orderItemDto.BookId;
+            orderItem.Quantity = orderItemDto.Quantity;
 
             _context.Entry(orderItem).State = EntityState.Modified;
 
@@ -127,5 +109,20 @@ namespace Kitab_Ghar.Controllers
         {
             return _context.OrderItems.Any(e => e.Id == id);
         }
+
+        // Mapping Helpers
+        private static OrderItemDTO ToDTO(OrderItem orderItem) => new OrderItemDTO
+        {
+            Id = orderItem.Id,
+            BookId = orderItem.BookId,
+            Quantity = orderItem.Quantity
+        };
+
+        private static OrderItem FromDTO(OrderItemDTO dto) => new OrderItem
+        {
+            Id = dto.Id,
+            BookId = dto.BookId,
+            Quantity = dto.Quantity
+        };
     }
 }
