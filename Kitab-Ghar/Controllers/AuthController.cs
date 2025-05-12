@@ -50,23 +50,28 @@ public class AuthController : ControllerBase
         {
             var membershipId = await _utils.GenerateMembershipId(_context);
 
+            // Determine the role based on the email
+            var role = model.Email.Equals("kitab-ghar-admin@gmail.com", StringComparison.OrdinalIgnoreCase)
+                ? "Admin"
+                : "Member";
+
             var userProfile = new User
             {
                 Name = model.Name,
                 Address = model.Address,
                 Email = model.Email,
                 MembershipId = membershipId,
-                Role = "Member"
+                Role = role
             };
 
             _context.Users.Add(userProfile);
             await _context.SaveChangesAsync();
 
-            await _userManager.AddToRoleAsync(identityUser, "Member");
+            await _userManager.AddToRoleAsync(identityUser, role);
 
             return Ok(new
             {
-                Message = "Member registered successfully.",
+                Message = $"{role} registered successfully.",
             });
         }
 
