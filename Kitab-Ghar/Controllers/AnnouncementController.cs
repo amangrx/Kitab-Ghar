@@ -125,6 +125,7 @@ namespace Kitab_Ghar.Controllers
         private static Announcement FromDTO(AnnouncementDTO dto) => new Announcement
         {
             Id = dto.Id,
+            Title = dto.Title,
             Message = dto.Message,
             Type = dto.Type,
             AnnouncementTime = dto.AnnouncementTime
