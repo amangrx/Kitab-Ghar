@@ -98,23 +98,8 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
-    // GET: api/Books/search?title=xyz&isbn=123
-    [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null)
-    {
-        var query = _context.Books.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(title))
-            query = query.Where(b => b.Title.Contains(title));
-
-        if (!string.IsNullOrWhiteSpace(isbn))
-            query = query.Where(b => b.ISBN.Contains(isbn));
-
-        var books = await query.ToListAsync();
-        return books.Select(ToDTO).ToList();
-    }
-
-    // GET: api/Books/filter?minPrice=10&maxPrice=30&availability=true
+  // GET: api/Books/filter?minPrice=10&maxPrice=30&availability=true
     [HttpGet("filter")]
     public async Task<ActionResult<IEnumerable<BookDTO>>> FilterBooks(
         decimal? minPrice = null,
@@ -136,6 +121,23 @@ public class BooksController : ControllerBase
         return books.Select(ToDTO).ToList();
     }
 
+    // GET: api/Books/search?title=xyz&isbn=123
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null)
+    {
+        var query = _context.Books.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(title))
+            query = query.Where(b => b.Title.Contains(title));
+
+        if (!string.IsNullOrWhiteSpace(isbn))
+            query = query.Where(b => b.ISBN.Contains(isbn));
+
+        var books = await query.ToListAsync();
+        return books.Select(ToDTO).ToList();
+    }
+
+  
     private bool BookExists(int id) => _context.Books.Any(e => e.BookId == id);
 
     private static BookDTO ToDTO(Book book) => new BookDTO
