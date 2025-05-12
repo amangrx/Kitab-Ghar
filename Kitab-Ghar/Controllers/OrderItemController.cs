@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,6 +106,22 @@ namespace Kitab_Ghar.Controllers
             return NoContent();
         }
 
+        // GET: api/OrderItem/ByOrder/5
+        [HttpGet("ByOrder/{orderId}")]
+        public async Task<ActionResult<IEnumerable<OrderItemDTO>>> GetOrderItemsByOrderId(int orderId)
+        {
+            var orderItems = await _context.OrderItems
+                .Where(oi => oi.OrderId == orderId)
+                .ToListAsync();
+
+            if (orderItems == null || !orderItems.Any())
+            {
+                return NotFound();
+            }
+
+            return orderItems.Select(oi => ToDTO(oi)).ToList();
+        }
+
         private bool OrderItemExists(int id)
         {
             return _context.OrderItems.Any(e => e.Id == id);
@@ -115,14 +132,16 @@ namespace Kitab_Ghar.Controllers
         {
             Id = orderItem.Id,
             BookId = orderItem.BookId,
-            Quantity = orderItem.Quantity
+            Quantity = orderItem.Quantity,
+            OrderId = orderItem.OrderId
         };
 
         private static OrderItem FromDTO(OrderItemDTO dto) => new OrderItem
         {
             Id = dto.Id,
             BookId = dto.BookId,
-            Quantity = dto.Quantity
+            Quantity = dto.Quantity,
+            OrderId = dto.OrderId
         };
     }
 }
