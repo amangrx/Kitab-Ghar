@@ -120,7 +120,8 @@ namespace Kitab_Ghar.Controllers
             Title = a.Title,
             Message = a.Message,
             Type = a.Type,
-            AnnouncementTime = a.AnnouncementTime
+            AnnouncementTime = a.AnnouncementTime,
+            EndTime = a.EndTime
         };
 
         private static Announcement FromDTO(AnnouncementDTO dto) => new Announcement
@@ -129,7 +130,8 @@ namespace Kitab_Ghar.Controllers
             Title = dto.Title,
             Message = dto.Message,
             Type = dto.Type,
-            AnnouncementTime = dto.AnnouncementTime
+            AnnouncementTime = dto.AnnouncementTime,
+            EndTime = dto.EndTime
         };
     }
 }

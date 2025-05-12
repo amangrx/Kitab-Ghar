@@ -144,6 +144,7 @@ public class Announcement
 
     // Changed to DateTimeOffset to handle time zone
     public DateTimeOffset AnnouncementTime { get; set; }
+    public DateTimeOffset EndTime { get; set; }
 }
 
 // Cart Entity

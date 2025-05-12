@@ -69,6 +69,7 @@ public class AnnouncementDTO
     public string Message { get; set; }
     public string Type { get; set; }
     public DateTimeOffset AnnouncementTime { get; set; }
+    public DateTimeOffset EndTime { get; set; }
 }
 
 
