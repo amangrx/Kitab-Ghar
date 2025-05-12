@@ -21,77 +21,56 @@ namespace Kitab_Ghar.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders()
         {
-            var orders = await _context.Orders
-                .Include(o => o.OrderItems)
-                .Include(o => o.User)
-                .ToListAsync();
-
-            var orderDTOs = orders.Select(o => new OrderDTO
-            {
-                Id = o.Id,
-                UserId = o.UserId,
-                Status = o.Status,
-                TotalAmount = o.TotalAmount,
-                Date = o.Date
-            }).ToList();
-
-            return Ok(orderDTOs);
+            var orders = await _context.Orders.ToListAsync();
+            return orders.Select(o => ToDTO(o)).ToList();
         }
 
         // GET: api/Order/5
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderDTO>> GetOrder(int id)
         {
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(o => o.Id == id);
+            var order = await _context.Orders.FindAsync(id);
 
             if (order == null)
             {
                 return NotFound();
             }
 
-            var orderDTO = new OrderDTO
-            {
-                Id = order.Id,
-                UserId = order.UserId,
-                Status = order.Status,
-                TotalAmount = order.TotalAmount,
-                Date = order.Date
-            };
-
-            return Ok(orderDTO);
+            return ToDTO(order);
         }
 
         // POST: api/Order
         [HttpPost]
-        public async Task<ActionResult<OrderDTO>> PostOrder(Order order)
+        public async Task<ActionResult<OrderDTO>> PostOrder(OrderDTO orderDto)
         {
+            var order = FromDTO(orderDto);
             order.Date = DateTimeOffset.UtcNow;
+
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            var orderDTO = new OrderDTO
-            {
-                Id = order.Id,
-                UserId = order.UserId,
-                Status = order.Status,
-                TotalAmount = order.TotalAmount,
-                Date = order.Date
-            };
-
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDTO);
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, ToDTO(order));
         }
 
         // PUT: api/Order/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutOrder(int id, Order order)
+        public async Task<IActionResult> PutOrder(int id, OrderDTO orderDto)
         {
-            if (id != order.Id)
+            if (id != orderDto.Id)
             {
                 return BadRequest();
             }
+
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            order.UserId = orderDto.UserId;
+            order.Status = orderDto.Status;
+            order.TotalAmount = orderDto.TotalAmount;
+            order.Date = orderDto.Date;
 
             _context.Entry(order).State = EntityState.Modified;
 
@@ -134,5 +113,24 @@ namespace Kitab_Ghar.Controllers
         {
             return _context.Orders.Any(e => e.Id == id);
         }
+
+        // Mapping Helpers
+        private static OrderDTO ToDTO(Order order) => new OrderDTO
+        {
+            Id = order.Id,
+            UserId = order.UserId,
+            Status = order.Status,
+            TotalAmount = order.TotalAmount,
+            Date = order.Date
+        };
+
+        private static Order FromDTO(OrderDTO dto) => new Order
+        {
+            Id = dto.Id,
+            UserId = dto.UserId,
+            Status = dto.Status,
+            TotalAmount = dto.TotalAmount,
+            Date = dto.Date
+        };
     }
 }
