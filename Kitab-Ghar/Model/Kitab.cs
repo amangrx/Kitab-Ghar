@@ -22,7 +22,7 @@ public class Book
 
     public DateTime PublicationDate { get; set; }
     public string Format { get; set; }
-
+    public decimal DiscountedPrice { get; set; }
     public string Tags { get; set; } 
     public string Image { get; set; }
 

@@ -21,6 +21,7 @@ public class BookDTO
     public string Format { get; set; }
     public string Tags { get; set; }
     public string Image { get; set; }
+    public decimal DiscountedPrice { get; set; }
 }
 
 public class UserDTO
@@ -59,6 +60,7 @@ public class DiscountDTO
     public int Id { get; set; }
     public int BookId { get; set; }
     public float DiscountPercent { get; set; }
+    public float DiscountedPrice { get; set; }
     public bool OnSale { get; set; }
     public DateTimeOffset DiscountStart { get; set; }
     public DateTimeOffset DiscountEnd { get; set; }

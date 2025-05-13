@@ -47,6 +47,18 @@ public class DiscountController : ControllerBase
         return CreatedAtAction(nameof(GetDiscount), new { id = discount.Id }, ToDTO(discount));
     }
 
+    // GET: api/Discount/book/5
+    [HttpGet("book/{bookId}")]
+    public async Task<ActionResult<DiscountDTO>> GetDiscountByBookId(int bookId)
+    {
+        var discount = await _context.Discounts
+            .Include(d => d.Book)
+            .FirstOrDefaultAsync(d => d.BookId == bookId);
+
+        return discount == null ? NotFound() : ToDTO(discount);
+    }
+
+
     // PUT: api/Discount/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutDiscount(int id, DiscountDTO dto)
