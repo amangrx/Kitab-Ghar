@@ -182,12 +182,10 @@ public class AuthController : ControllerBase
             return Ok(new
             {
                 UserId = user.Id,
-                user.Name,
-                user.Email,
-                user.MembershipId,
-                user.Address,
-                Roles = roles,
-                IsAdmin = roles.Contains("Admin")
+                Name = user.Name,
+                Email = user.Email,
+                MembershipId = user.MembershipId,
+                Role = roles.FirstOrDefault() // Returns the first role or null
             });
         }
         catch (Exception ex)
