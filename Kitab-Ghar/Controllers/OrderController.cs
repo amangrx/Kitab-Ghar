@@ -39,6 +39,22 @@ namespace Kitab_Ghar.Controllers
             return ToDTO(order);
         }
 
+        // GET: api/Order/user/5
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrdersByUserId(int userId)
+        {
+            var orders = await _context.Orders
+                                       .Where(o => o.UserId == userId)
+                                       .ToListAsync();
+
+            if (orders == null || orders.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return orders.Select(o => ToDTO(o)).ToList();
+        }
+
         // POST: api/Order
         [HttpPost]
         public async Task<ActionResult<OrderDTO>> PostOrder(OrderDTO orderDto)
