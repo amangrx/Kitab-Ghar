@@ -55,6 +55,24 @@ public class BookmarkController : ControllerBase
         return CreatedAtAction(nameof(GetBookmark), new { id = bookmark.Id }, ToDTO(bookmark));
     }
 
+    // GET: api/Bookmark/user/5
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<IEnumerable<BookmarkDTO>>> GetBookmarksByUser(int userId)
+    {
+        var bookmarks = await _context.Bookmarks
+            .Include(b => b.User)
+            .Include(b => b.Book)
+            .Where(b => b.UserId == userId)
+            .ToListAsync();
+
+        if (!bookmarks.Any())
+        {
+            return NotFound();
+        }
+
+        return bookmarks.Select(b => ToDTO(b)).ToList();
+    }
+
     // PUT: api/Bookmark/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutBookmark(int id, BookmarkDTO bookmarkDto)
@@ -118,12 +136,14 @@ public class BookmarkController : ControllerBase
     private static BookmarkDTO ToDTO(Bookmark bookmark) => new BookmarkDTO
     {
         Id = bookmark.Id,
-        BookId = bookmark.BookId
+        BookId = bookmark.BookId,
+        UserId = bookmark.UserId
     };
 
     private static Bookmark FromDTO(BookmarkDTO dto) => new Bookmark
     {
         Id = dto.Id,
-        BookId = dto.BookId
+        BookId = dto.BookId,
+        UserId = dto.UserId
     };
 }

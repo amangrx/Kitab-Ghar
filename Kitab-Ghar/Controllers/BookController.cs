@@ -128,16 +128,22 @@ public class BooksController : ControllerBase
         var query = _context.Books.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(title))
-            query = query.Where(b => b.Title.Contains(title));
+        {
+            var lowerTitle = title.ToLower();
+            query = query.Where(b => b.Title.ToLower().Contains(lowerTitle));
+        }
 
         if (!string.IsNullOrWhiteSpace(isbn))
-            query = query.Where(b => b.ISBN.Contains(isbn));
+        {
+            var lowerIsbn = isbn.ToLower();
+            query = query.Where(b => b.ISBN.ToLower().Contains(lowerIsbn));
+        }
 
         var books = await query.ToListAsync();
         return books.Select(ToDTO).ToList();
     }
 
-  
+
     private bool BookExists(int id) => _context.Books.Any(e => e.BookId == id);
 
     private static BookDTO ToDTO(Book book) => new BookDTO
