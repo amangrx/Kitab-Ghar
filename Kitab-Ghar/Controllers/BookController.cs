@@ -121,9 +121,9 @@ public class BooksController : ControllerBase
         return books.Select(ToDTO).ToList();
     }
 
-    // GET: api/Books/search?title=xyz&isbn=123
+    // GET: api/Books/search?title=xyz&isbn=123&genre=fantasy
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null)
+    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null, string genre = null)
     {
         var query = _context.Books.AsQueryable();
 
@@ -139,10 +139,15 @@ public class BooksController : ControllerBase
             query = query.Where(b => b.ISBN.ToLower().Contains(lowerIsbn));
         }
 
+        if (!string.IsNullOrWhiteSpace(genre))
+        {
+            var lowerGenre = genre.ToLower();
+            query = query.Where(b => b.Genre.ToLower().Contains(lowerGenre));
+        }
+
         var books = await query.ToListAsync();
         return books.Select(ToDTO).ToList();
     }
-
 
     private bool BookExists(int id) => _context.Books.Any(e => e.BookId == id);
 
