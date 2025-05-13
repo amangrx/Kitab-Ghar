@@ -91,13 +91,6 @@ public class AuthController : ControllerBase
         return Unauthorized("Invalid email or password.");
     }
 
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
-    {
-        await _signInManager.SignOutAsync();
-        return Ok("Logged out successfully.");
-    }
-
     [Authorize]
     [HttpGet("user")]
     public IActionResult GetUser()
@@ -162,4 +155,13 @@ public class AuthController : ControllerBase
             });
         }
     }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return Ok("Logged out successfully.");
+    }
+
+
 }
