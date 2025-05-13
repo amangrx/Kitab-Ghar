@@ -57,8 +57,11 @@ public class ReviewDTO
 public class DiscountDTO
 {
     public int Id { get; set; }
+    public int BookId { get; set; }
     public float DiscountPercent { get; set; }
     public bool OnSale { get; set; }
+    public DateTimeOffset DiscountStart { get; set; }
+    public DateTimeOffset DiscountEnd { get; set; }
 }
 
 
