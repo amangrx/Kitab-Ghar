@@ -98,13 +98,14 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
-
-  // GET: api/Books/filter?minPrice=10&maxPrice=30&availability=true
+    // GET: api/Books/filter?minPrice=10&maxPrice=30&availability=true&genre=Fantasy&language=English
     [HttpGet("filter")]
     public async Task<ActionResult<IEnumerable<BookDTO>>> FilterBooks(
         decimal? minPrice = null,
         decimal? maxPrice = null,
-        bool? availability = null)
+        bool? availability = null,
+        string genre = null,
+        string language = null)
     {
         var query = _context.Books.AsQueryable();
 
@@ -117,9 +118,22 @@ public class BooksController : ControllerBase
         if (availability.HasValue)
             query = query.Where(b => b.Availability == availability);
 
+        if (!string.IsNullOrWhiteSpace(genre))
+        {
+            var lowerGenre = genre.ToLower();
+            query = query.Where(b => b.Genre.ToLower().Contains(lowerGenre));
+        }
+
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            var lowerLanguage = language.ToLower();
+            query = query.Where(b => b.Language.ToLower().Contains(lowerLanguage));
+        }
+
         var books = await query.ToListAsync();
         return books.Select(ToDTO).ToList();
     }
+
 
     // GET: api/Books/search?title=xyz&isbn=123&genre=fantasy
     [HttpGet("search")]

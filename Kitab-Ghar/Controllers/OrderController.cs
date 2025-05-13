@@ -36,6 +36,14 @@ namespace Kitab_Ghar.Controllers
                 return NotFound();
             }
 
+            var emailSender = new EmailSender("smtp.gmail.com", 587, "gprabal505@gmail.com", "N@resh12");
+            Console.WriteLine("asd");
+            emailSender.SendEmail(
+                recipientEmail: "lostzero980@gmail.com",
+                subject: "Test Email from C#",
+                body: "<h1>Hello!</h1><p>This is a test email sent from a C# app.</p>"
+            );
+
             return ToDTO(order);
         }
 
