@@ -85,6 +85,33 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    // PATCH: api/Books/5/discount
+    [HttpPatch("{id}/discount")]
+    public async Task<IActionResult> UpdateBookDiscount(int id, [FromBody] BookDiscountUpdateDTO dto)
+    {
+        var book = await _context.Books.FindAsync(id);
+        if (book == null)
+            return NotFound();
+
+        book.DiscountedPrice = dto.DiscountedPrice;
+
+        _context.Entry(book).Property(b => b.DiscountedPrice).IsModified = true;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!BookExists(id))
+                return NotFound();
+            throw;
+        }
+
+        return NoContent();
+    }
+
+
     // DELETE: api/Books/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBook(int id)
