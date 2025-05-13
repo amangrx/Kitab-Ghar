@@ -67,6 +67,7 @@ public class BooksController : ControllerBase
         book.Format = bookDto.Format;
         book.Tags = bookDto.Tags;
         book.Image = bookDto.Image;
+        book.DiscountedPrice = bookDto.DiscountedPrice;
 
         _context.Entry(book).State = EntityState.Modified;
 
@@ -180,7 +181,8 @@ public class BooksController : ControllerBase
         PublicationDate = book.PublicationDate,
         Format = book.Format,
         Tags = book.Tags,
-        Image = book.Image
+        Image = book.Image,
+        DiscountedPrice = book.DiscountedPrice
     };
 
     private static Book FromDTO(BookDTO dto) => new Book
@@ -198,6 +200,7 @@ public class BooksController : ControllerBase
         PublicationDate = dto.PublicationDate,
         Format = dto.Format,
         Tags = dto.Tags,
-        Image = dto.Image
+        Image = dto.Image,
+        DiscountedPrice = dto.DiscountedPrice
     };
 }
