@@ -111,6 +111,46 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    // PATCH: api/Books/5/details
+    [HttpPatch("{id}/details")]
+    public async Task<IActionResult> UpdateBookDetails(int id, [FromBody] BookUpdateDTO dto)
+    {
+        var book = await _context.Books.FindAsync(id);
+        if (book == null)
+            return NotFound();
+
+        // Update fields except Image and DiscountedPrice
+        if (dto.Title != null) book.Title = dto.Title;
+        if (dto.Author != null) book.Author = dto.Author;
+        if (dto.Genre != null) book.Genre = dto.Genre;
+        if (dto.Price != 0) book.Price = dto.Price;
+        if (dto.Language != null) book.Language = dto.Language;
+        if (dto.Publishers != null) book.Publishers = dto.Publishers;
+        if (dto.Description != null) book.Description = dto.Description;
+        if (dto.Availability != book.Availability) book.Availability = dto.Availability;
+        if (dto.ISBN != null) book.ISBN = dto.ISBN;
+        if (dto.PublicationDate != default(DateTime)) book.PublicationDate = dto.PublicationDate;
+        if (dto.Format != null) book.Format = dto.Format;
+        if (dto.Tags != null) book.Tags = dto.Tags;
+
+        // Do NOT update Image or DiscountedPrice
+        _context.Entry(book).Property(b => b.Image).IsModified = false;
+        _context.Entry(book).Property(b => b.DiscountedPrice).IsModified = false;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!BookExists(id))
+                return NotFound();
+            throw;
+        }
+
+        return NoContent();
+    }
+
 
     // DELETE: api/Books/5
     [HttpDelete("{id}")]

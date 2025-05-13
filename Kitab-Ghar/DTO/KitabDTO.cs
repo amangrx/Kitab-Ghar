@@ -132,3 +132,19 @@ public class BookDiscountUpdateDTO
 {
     public decimal DiscountedPrice { get; set; }
 }
+
+public class BookUpdateDTO
+{
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public string Genre { get; set; }
+    public decimal Price { get; set; }
+    public string Language { get; set; }
+    public string Publishers { get; set; }
+    public string Description { get; set; }
+    public bool Availability { get; set; }
+    public string ISBN { get; set; }
+    public DateTime PublicationDate { get; set; }
+    public string Format { get; set; }
+    public string Tags { get; set; }
+}
