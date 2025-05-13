@@ -119,4 +119,9 @@ public class BillDTO
     public decimal Amount { get; set; }
 }
 
-
+public class EmailRequest
+{
+    public string To { get; set; }
+    public string Subject { get; set; }
+    public string Body { get; set; }
+}

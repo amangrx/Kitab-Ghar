@@ -1,36 +1,32 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Mail;
 
-public class EmailSender
+public interface IEmailSender
 {
-    public string SmtpServer { get; set; }
-    public int Port { get; set; }
-    public string SenderEmail { get; set; }
-    public string SenderPassword { get; set; }
+    Task SendEmailAsync(string recipientEmail, string subject, string body);
+}
 
-    public EmailSender(string smtpServer, int port, string senderEmail, string senderPassword)
-    {
-        SmtpServer = smtpServer;
-        Port = port;
-        SenderEmail = senderEmail;
-        SenderPassword = senderPassword;
-    }
+public class EmailSender : IEmailSender
+{
 
-    public void SendEmail(string recipientEmail, string subject, string body)
+    public Task SendEmailAsync(string recipientEmail, string subject, string body)
     {
-        using (var client = new SmtpClient(SmtpServer, Port))
+        var emailSender = "gprabal505@gmail.com";
+        var emailPassword = "cxvu vcax vvtx mtkl";
+
+        var client = new SmtpClient("smtp.gmail.com", 587)
         {
-            client.Credentials = new NetworkCredential(SenderEmail, SenderPassword);
-            client.EnableSsl = true;
+            Credentials = new NetworkCredential(emailSender, emailPassword),
+            EnableSsl = true
+        };
 
-            var mailMessage = new MailMessage(SenderEmail, recipientEmail)
-            {
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-
-            client.Send(mailMessage);
-        }
+        return client.SendMailAsync(new MailMessage
+        (
+            from: emailSender,
+            to: recipientEmail, 
+            subject,
+            body
+        )); 
     }
 }
