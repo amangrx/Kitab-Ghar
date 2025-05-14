@@ -15,7 +15,16 @@ public class BooksController : ControllerBase
         _context = context;
     }
 
-    // GET: api/Books
+    // GET: api/Books// GET: api/Books/5
+    [HttpGet("{id}")]
+    // Handles GET requests to retrieve a book by ID, returning BookDTO or 404 if not found
+    public async Task<ActionResult<BookDTO>> GetBook(int id)
+    {
+        var book = await _context.Books.FindAsync(id);
+        return book == null ? NotFound() : ToDTO(book);
+    }
+
+    // Handles GET requests to retrieve all books, returning a list of BookDTO
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookDTO>>> GetBooks()
     {
@@ -42,47 +51,56 @@ public class BooksController : ControllerBase
         return CreatedAtAction(nameof(GetBook), new { id = book.BookId }, ToDTO(book));
     }
 
-    // PUT: api/Books/5
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
+// the ID of the book to update.
+//The data transfer object containing updated book details
+// An IActionResult indicating the result of the operation.
+// PUT: api/Books/5
+[HttpPut("{id}")]
+public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
+{
+    // Check if the provided ID matches the BookDTO's ID
+    if (id != bookDto.BookId)
+        return BadRequest();
+
+    // Attempt to retrieve the existing book from the database
+    var book = await _context.Books.FindAsync(id);
+    if (book == null)
+        return NotFound();
+
+    // Update all fields of the book entity with values from the DTO
+    book.Title = bookDto.Title;
+    book.Author = bookDto.Author;
+    book.Genre = bookDto.Genre;
+    book.Price = bookDto.Price;
+    book.Language = bookDto.Language;
+    book.Publishers = bookDto.Publishers;
+    book.Description = bookDto.Description;
+    book.Availability = bookDto.Availability;
+    book.ISBN = bookDto.ISBN;
+    book.PublicationDate = bookDto.PublicationDate;
+    book.Format = bookDto.Format;
+    book.Tags = bookDto.Tags;
+    book.Image = bookDto.Image;
+
+    // Mark the book entity as modified
+    _context.Entry(book).State = EntityState.Modified;
+
+    try
     {
-        if (id != bookDto.BookId)
-            return BadRequest();
-
-        var book = await _context.Books.FindAsync(id);
-        if (book == null)
-            return NotFound();
-
-        // Update all fields
-        book.Title = bookDto.Title;
-        book.Author = bookDto.Author;
-        book.Genre = bookDto.Genre;
-        book.Price = bookDto.Price;
-        book.Language = bookDto.Language;
-        book.Publishers = bookDto.Publishers;
-        book.Description = bookDto.Description;
-        book.Availability = bookDto.Availability;
-        book.ISBN = bookDto.ISBN;
-        book.PublicationDate = bookDto.PublicationDate;
-        book.Format = bookDto.Format;
-        book.Tags = bookDto.Tags;
-        book.Image = bookDto.Image;
-
-        _context.Entry(book).State = EntityState.Modified;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!BookExists(id))
-                return NotFound();
-            throw;
-        }
-
-        return NoContent();
+        // Save changes to the database
+        await _context.SaveChangesAsync();
     }
+    catch (DbUpdateConcurrencyException)
+    {
+        // Check if the book still exists in the database
+        if (!BookExists(id))
+            return NotFound();
+        throw;
+    }
+
+    // Return a NoContent response to indicate success
+    return NoContent();
+}
 
     // DELETE: api/Books/5
     [HttpDelete("{id}")]
