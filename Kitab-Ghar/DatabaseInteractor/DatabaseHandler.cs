@@ -183,7 +183,8 @@
                     ISBN = "123-4567890123",
                     Format = "Paperback",
                     Tags = "coding,software,programming",
-                    Image = ""
+                    Image = "",
+                    DiscountedPrice = 0
                 },
                 new Book
                 {
@@ -199,7 +200,8 @@
                     ISBN = "456-7891234567",
                     Format = "Hardcover",
                     Tags = "psychology,mind,science",
-                    Image = ""
+                    Image = "",
+                    DiscountedPrice = 0
                 }
             );
 

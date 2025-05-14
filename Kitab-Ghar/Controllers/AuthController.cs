@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-
 
 [ApiController]
 [Route("api/[controller]")]
@@ -12,16 +12,20 @@ public class AuthController : ControllerBase
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly Utils _utils;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(UserManager<IdentityUser> userManager,
-                          SignInManager<IdentityUser> signInManager,
-                          DatabaseHandler context,
-                          Utils utils)
+    public AuthController(
+        UserManager<IdentityUser> userManager,
+        SignInManager<IdentityUser> signInManager,
+        DatabaseHandler context,
+        Utils utils,
+        ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
         _utils = utils;
+        _logger = logger;
     }
 
     [HttpPost("register-member")]
@@ -32,29 +36,38 @@ public class AuthController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var existingUser = await _userManager.FindByEmailAsync(model.Email);
-        if (existingUser != null)
+        try
         {
-            return BadRequest("Email is already registered.");
-        }
+            // Check for existing user
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                return Conflict("Email is already registered.");
+            }
 
-        var identityUser = new IdentityUser
-        {
-            UserName = model.Email,
-            Email = model.Email
-        };
+            // Create Identity user
+            var identityUser = new IdentityUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                EmailConfirmed = true
+            };
 
-        var result = await _userManager.CreateAsync(identityUser, model.Password);
+            var createResult = await _userManager.CreateAsync(identityUser, model.Password);
+            if (!createResult.Succeeded)
+            {
+                return BadRequest(createResult.Errors);
+            }
 
-        if (result.Succeeded)
-        {
+            // Generate membership ID
             var membershipId = await _utils.GenerateMembershipId(_context);
 
-            // Determine the role based on the email
+            // Determine role
             var role = model.Email.Equals("kitab-ghar-admin@gmail.com", StringComparison.OrdinalIgnoreCase)
                 ? "Admin"
                 : "Member";
 
+            // Create custom user profile
             var userProfile = new User
             {
                 Name = model.Name,
@@ -67,101 +80,133 @@ public class AuthController : ControllerBase
             _context.Users.Add(userProfile);
             await _context.SaveChangesAsync();
 
-            await _userManager.AddToRoleAsync(identityUser, role);
+            // Assign role
+            var roleResult = await _userManager.AddToRoleAsync(identityUser, role);
+            if (!roleResult.Succeeded)
+            {
+                _logger.LogWarning("Failed to add role to user: {Errors}", roleResult.Errors);
+            }
 
+            // Return success response without token
             return Ok(new
             {
-                Message = $"{role} registered successfully.",
+                Message = $"{role} registered successfully. Please login to access your account.",
+                UserId = userProfile.Id,
+                MembershipId = membershipId
             });
         }
-
-        return BadRequest(result.Errors);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during member registration");
+            return StatusCode(500, "An error occurred during registration");
+        }
     }
 
     [HttpPost("login-token")]
     public async Task<IActionResult> LoginForToken([FromBody] CredentialDto model)
     {
-        var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+        if (!ModelState.IsValid)
         {
-            var roles = await _userManager.GetRolesAsync(user);
-            var result = await TokenHelper.GenerateToken(user, roles.ToList(), _context);
-            return Ok(result);
+            return BadRequest(ModelState);
         }
-        return Unauthorized("Invalid email or password.");
-    }
 
-    [Authorize]
-    [HttpGet("user")]
-    public IActionResult GetUser()
-    {
         try
         {
-            // Get all claims - store as list of key-value pairs instead of dictionary
-            var allClaims = User.Claims
-                .Select(c => new { c.Type, c.Value })
-                .ToList();
-
-            // Get user ID - checking multiple claim types
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)  // System standard
-                      ?? User.FindFirstValue("sub")                     // JWT standard
-                      ?? User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"); // Legacy
-
-            // Get name - checking multiple claim types
-            var name = User.FindFirstValue(ClaimTypes.Name)            // System standard
-                    ?? User.FindFirstValue("name")                     // Common alternative
-                    ?? User.FindFirstValue("given_name");              // JWT standard
-
-            // Get role - checking multiple claim types
-            var role = User.FindFirstValue(ClaimTypes.Role)            // System standard
-                    ?? User.FindFirstValue("role")                     // Common alternative
-                    ?? User.FindFirstValue("http://schemas.microsoft.com/ws/2008/06/identity/claims/role"); // Legacy
-
-            if (string.IsNullOrEmpty(userId))
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
             {
-                return Unauthorized(new
-                {
-                    Message = "User identification missing",
-                    AvailableClaims = allClaims
-                });
+                return Unauthorized("Invalid email or password.");
             }
 
-            if (string.IsNullOrEmpty(role))
+            // Check password without locking out on failure
+            var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+            if (!passwordValid)
             {
-                return Unauthorized(new
-                {
-                    Message = "Role information missing",
-                    AvailableClaims = allClaims
-                });
+                return Unauthorized("Invalid email or password.");
             }
+
+            // Get roles and generate token
+            var roles = await _userManager.GetRolesAsync(user);
+            var tokenResult = await TokenHelper.GenerateToken(user, roles.ToList(), _context);
+
+            // Get custom user details
+            var customUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == user.Email);
 
             return Ok(new
             {
-                Id = userId,
-                Name = name?.Trim(),
-                Role = role,
-                Email = User.FindFirstValue(ClaimTypes.Email),
-                MembershipId = User.FindFirstValue("membership_id")
+                tokenResult.Token,
+                tokenResult.ExpiresIn,
+                tokenResult.UserId,
+                customUser?.MembershipId,
+                customUser?.Name,
+                Roles = roles
             });
         }
         catch (Exception ex)
         {
-            // Log the error here if you have logging configured
-            return StatusCode(500, new
+            _logger.LogError(ex, "Error during login");
+            return StatusCode(500, "An error occurred during login");
+        }
+    }
+
+    [Authorize]
+    [HttpGet("user")]
+    public async Task<IActionResult> GetUser()
+    {
+        try
+        {
+            // Get user ID from claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(userId))
             {
-                Message = "An error occurred while processing user information",
-                Error = ex.Message
-                // Note: Don't include stack trace in production
+                return Unauthorized("User identification missing");
+            }
+
+            // Try to get the custom user ID if available
+            var customUserIdClaim = User.FindFirst("custom_user_id");
+            var effectiveUserId = customUserIdClaim?.Value ?? userId;
+
+            // Get user details from database
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id.ToString() == effectiveUserId || u.Email == User.FindFirstValue(ClaimTypes.Email));
+
+            if (user == null)
+            {
+                return NotFound("User profile not found");
+            }
+
+            // Get roles from claims
+            var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+
+            return Ok(new
+            {
+                UserId = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                MembershipId = user.MembershipId,
+                Role = roles.FirstOrDefault() // Returns the first role or null
             });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user details");
+            return StatusCode(500, "An error occurred while retrieving user information");
         }
     }
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await _signInManager.SignOutAsync();
-        return Ok("Logged out successfully.");
+        try
+        {
+            await _signInManager.SignOutAsync();
+            return Ok("Logged out successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during logout");
+            return StatusCode(500, "An error occurred during logout");
+        }
     }
-
-
 }

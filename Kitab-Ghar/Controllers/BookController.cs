@@ -102,6 +102,73 @@ public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
     return NoContent();
 }
 
+    // PATCH: api/Books/5/discount
+    [HttpPatch("{id}/discount")]
+    public async Task<IActionResult> UpdateBookDiscount(int id, [FromBody] BookDiscountUpdateDTO dto)
+    {
+        var book = await _context.Books.FindAsync(id);
+        if (book == null)
+            return NotFound();
+
+        book.DiscountedPrice = dto.DiscountedPrice;
+
+        _context.Entry(book).Property(b => b.DiscountedPrice).IsModified = true;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!BookExists(id))
+                return NotFound();
+            throw;
+        }
+
+        return NoContent();
+    }
+
+    // PATCH: api/Books/5/details
+    [HttpPatch("{id}/details")]
+    public async Task<IActionResult> UpdateBookDetails(int id, [FromBody] BookUpdateDTO dto)
+    {
+        var book = await _context.Books.FindAsync(id);
+        if (book == null)
+            return NotFound();
+
+        // Update fields except Image and DiscountedPrice
+        if (dto.Title != null) book.Title = dto.Title;
+        if (dto.Author != null) book.Author = dto.Author;
+        if (dto.Genre != null) book.Genre = dto.Genre;
+        if (dto.Price != 0) book.Price = dto.Price;
+        if (dto.Language != null) book.Language = dto.Language;
+        if (dto.Publishers != null) book.Publishers = dto.Publishers;
+        if (dto.Description != null) book.Description = dto.Description;
+        if (dto.Availability != book.Availability) book.Availability = dto.Availability;
+        if (dto.ISBN != null) book.ISBN = dto.ISBN;
+        if (dto.PublicationDate != default(DateTime)) book.PublicationDate = dto.PublicationDate;
+        if (dto.Format != null) book.Format = dto.Format;
+        if (dto.Tags != null) book.Tags = dto.Tags;
+
+        // Do NOT update Image or DiscountedPrice
+        _context.Entry(book).Property(b => b.Image).IsModified = false;
+        _context.Entry(book).Property(b => b.DiscountedPrice).IsModified = false;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!BookExists(id))
+                return NotFound();
+            throw;
+        }
+
+        return NoContent();
+    }
+
+
     // DELETE: api/Books/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBook(int id)
@@ -116,13 +183,14 @@ public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
         return NoContent();
     }
 
-
-  // GET: api/Books/filter?minPrice=10&maxPrice=30&availability=true
+    // GET: api/Books/filter?minPrice=10&maxPrice=30&availability=true&genre=Fantasy&language=English
     [HttpGet("filter")]
     public async Task<ActionResult<IEnumerable<BookDTO>>> FilterBooks(
         decimal? minPrice = null,
         decimal? maxPrice = null,
-        bool? availability = null)
+        bool? availability = null,
+        string genre = null,
+        string language = null)
     {
         var query = _context.Books.AsQueryable();
 
@@ -135,27 +203,51 @@ public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
         if (availability.HasValue)
             query = query.Where(b => b.Availability == availability);
 
+        if (!string.IsNullOrWhiteSpace(genre))
+        {
+            var lowerGenre = genre.ToLower();
+            query = query.Where(b => b.Genre.ToLower().Contains(lowerGenre));
+        }
+
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            var lowerLanguage = language.ToLower();
+            query = query.Where(b => b.Language.ToLower().Contains(lowerLanguage));
+        }
+
         var books = await query.ToListAsync();
         return books.Select(ToDTO).ToList();
     }
 
-    // GET: api/Books/search?title=xyz&isbn=123
+
+    // GET: api/Books/search?title=xyz&isbn=123&genre=fantasy
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null)
+    public async Task<ActionResult<IEnumerable<BookDTO>>> SearchBooks(string title = null, string isbn = null, string genre = null)
     {
         var query = _context.Books.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(title))
-            query = query.Where(b => b.Title.Contains(title));
+        {
+            var lowerTitle = title.ToLower();
+            query = query.Where(b => b.Title.ToLower().Contains(lowerTitle));
+        }
 
         if (!string.IsNullOrWhiteSpace(isbn))
-            query = query.Where(b => b.ISBN.Contains(isbn));
+        {
+            var lowerIsbn = isbn.ToLower();
+            query = query.Where(b => b.ISBN.ToLower().Contains(lowerIsbn));
+        }
+
+        if (!string.IsNullOrWhiteSpace(genre))
+        {
+            var lowerGenre = genre.ToLower();
+            query = query.Where(b => b.Genre.ToLower().Contains(lowerGenre));
+        }
 
         var books = await query.ToListAsync();
         return books.Select(ToDTO).ToList();
     }
 
-  
     private bool BookExists(int id) => _context.Books.Any(e => e.BookId == id);
 
     private static BookDTO ToDTO(Book book) => new BookDTO
@@ -173,7 +265,8 @@ public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
         PublicationDate = book.PublicationDate,
         Format = book.Format,
         Tags = book.Tags,
-        Image = book.Image
+        Image = book.Image,
+        DiscountedPrice = book.DiscountedPrice
     };
 
     private static Book FromDTO(BookDTO dto) => new Book
@@ -191,6 +284,7 @@ public async Task<IActionResult> PutBook(int id, BookDTO bookDto)
         PublicationDate = dto.PublicationDate,
         Format = dto.Format,
         Tags = dto.Tags,
-        Image = dto.Image
+        Image = dto.Image,
+        DiscountedPrice = dto.DiscountedPrice
     };
 }

@@ -26,7 +26,8 @@ namespace Kitab_Ghar.Controllers
             {
                 Id = ci.Id,
                 BookId = ci.BookId,
-                Quantity = ci.Quantity
+                Quantity = ci.Quantity,
+                CartId = ci.CartId
             }).ToList();
 
             return cartItemDTOs;
@@ -60,8 +61,9 @@ namespace Kitab_Ghar.Controllers
         {
             var cartItem = new CartItem
             {
+                Id = cartItemDTO.Id,
                 BookId = cartItemDTO.BookId,
-                CartId = GetCartIdFromBookId(cartItemDTO.BookId), 
+                CartId = cartItemDTO.CartId, 
                 Quantity = cartItemDTO.Quantity
             };
 
